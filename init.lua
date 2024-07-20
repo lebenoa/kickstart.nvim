@@ -95,6 +95,7 @@ vim.g.have_nerd_font = true
 
 if vim.g.neovide then
   vim.g.neovide_transparency = 0.9
+  vim.o.guifont = 'IosevkaTerm Nerd Font'
 end
 
 -- [[ Setting options ]]
@@ -111,7 +112,7 @@ vim.opt.shellxquote = ''
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
-vim.opt.relativenumber = true
+vim.opt.relativenumber = false
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -122,7 +123,7 @@ vim.opt.showmode = false
 -- Sync clipboard between OS and Neovim.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
-vim.opt.clipboard = 'unnamedplus'
+-- vim.opt.clipboard = 'unnamedplus'
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -177,6 +178,14 @@ vim.keymap.set('v', '<CS-k>', "y'<P'<gv", { desc = 'Duplicate selected line(s) u
 
 vim.keymap.set('v', '<A-j>', ":m '>+1<CR>gv=gv", { desc = 'Move selected line(s) down' })
 vim.keymap.set('v', '<A-k>', ":m '<-2<CR>gv=gv", { desc = 'Move selected line(s) up' })
+
+-- Clipboard related
+vim.keymap.set('n', '<leader>y', '"+y', { desc = 'Yank to system clipboard' })
+vim.keymap.set('v', '<leader>y', '"+y', { desc = 'Yank to system clipboard' })
+
+vim.keymap.set('n', '<leader>p', '"+p', { desc = 'Parse from system clipbard after cursor' })
+vim.keymap.set('n', '<leader>P', '"+P', { desc = 'Parse from system clipbard before cursor' })
+vim.keymap.set('v', '<leader>p', '"+p', { desc = 'Parse from system clipbard' })
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
@@ -250,7 +259,7 @@ vim.opt.rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
-  'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+  -- 'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -262,14 +271,17 @@ require('lazy').setup({
   --    require('Comment').setup({})
 
   -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {
-    toggler = {
-      line = '<C-c>',
+  {
+    'numToStr/Comment.nvim',
+    opts = {
+      toggler = {
+        line = '<C-c>',
+      },
+      opleader = {
+        line = '<C-c>',
+      },
     },
-    opleader = {
-      line = '<C-c>',
-    },
-  } },
+  },
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
@@ -741,6 +753,48 @@ require('lazy').setup({
       --  into multiple repos for maintenance purposes.
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+      {
+        'saecki/crates.nvim',
+        tag = 'stable',
+        config = function()
+          local crates = require 'crates'
+
+          vim.keymap.set('n', '<leader>cr', crates.reload, { desc = 'Refetch all crates version' })
+
+          vim.keymap.set('n', '<leader>cv', crates.show_versions_popup, { desc = 'Show versions list' })
+          vim.keymap.set('n', '<leader>cf', crates.show_features_popup, { desc = 'Show features list' })
+          vim.keymap.set('n', '<leader>cd', crates.show_dependencies_popup, { desc = 'Show dependencies list' })
+
+          vim.keymap.set('n', '<leader>cu', crates.update_crate, { desc = 'Update crate' })
+          vim.keymap.set('v', '<leader>cu', crates.update_crates, { desc = 'Update selected crates' })
+          vim.keymap.set('n', '<leader>ca', crates.update_all_crates, { desc = 'Update all crates' })
+          vim.keymap.set('n', '<leader>cU', crates.upgrade_crate, { desc = 'Upgrade crate' })
+          vim.keymap.set('v', '<leader>cU', crates.upgrade_crates, { desc = 'Upgrade selected crates' })
+          vim.keymap.set('n', '<leader>cA', crates.upgrade_all_crates, { desc = 'Upgrade all crates' })
+
+          vim.keymap.set('n', '<leader>cx', crates.expand_plain_crate_to_inline_table, { desc = 'Expand crate to inline table' })
+          vim.keymap.set('n', '<leader>cX', crates.extract_crate_into_table, { desc = 'Extract crate to seperate table' })
+
+          vim.keymap.set('n', '<leader>cH', crates.open_homepage, { desc = "Open crate's homepage" })
+          vim.keymap.set('n', '<leader>cR', crates.open_repository, { desc = "Open crate's repository" })
+          vim.keymap.set('n', '<leader>cD', crates.open_documentation, { desc = "Open crate's documentation" })
+          vim.keymap.set('n', '<leader>cC', crates.open_crates_io, { desc = 'Open crate in crates.io' })
+          vim.keymap.set('n', '<leader>cL', crates.open_lib_rs, { desc = 'Open crate in lib.rs' })
+
+          crates.setup {
+            completion = {
+              cmp = {
+                enabled = true,
+              },
+              crates = {
+                enabled = true,
+                max_results = 8,
+                min_chars = 3,
+              },
+            },
+          }
+        end,
+      },
     },
     config = function()
       -- See `:help cmp`
@@ -812,6 +866,7 @@ require('lazy').setup({
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
+          { name = 'crates' },
         },
       }
     end,
@@ -834,10 +889,11 @@ require('lazy').setup({
       vim.cmd.hi 'Comment gui=none'
     end,
     opts = {
+      transparent = true,
       underline_links = true,
-      color_overrides = {
-        vscBack = '#070707',
-      },
+      -- color_overrides = {
+      --   vscBack = '#070707',
+      -- },
     },
   },
 
@@ -879,13 +935,19 @@ require('lazy').setup({
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
+      local hipatterns = require 'mini.hipatterns'
+      hipatterns.setup {
+        highlighters = {
+          hex_color = hipatterns.gen_highlighter.hex_color(),
+        },
+      }
     end,
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'css', 'typescript' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -959,4 +1021,4 @@ require('lazy').setup({
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- vim: ts=4 sts=4 sw=4 et
