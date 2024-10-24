@@ -14,6 +14,18 @@ return {
     { '\\', ':Neotree reveal<CR>', desc = 'NeoTree reveal', silent = true },
   },
   opts = {
+    window = {
+      width = 25,
+      mappings = {
+        ['.'] = function(state)
+          local current_node = state.tree:get_node()
+          local path = current_node:get_id()
+
+          require('neo-tree.sources.filesystem.commands').set_root(state)
+          vim.cmd('cd ' .. path)
+        end,
+      },
+    },
     filesystem = {
       window = {
         mappings = {
